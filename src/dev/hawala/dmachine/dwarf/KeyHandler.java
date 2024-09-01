@@ -56,7 +56,8 @@ import dev.hawala.dmachine.engine.Processes;
  * @author Dr. Hans-Walter Latz / Berlin (2017)
  */
 public class KeyHandler implements KeyListener {
-	
+	private final MainUI mainWindow;
+
 	// executor service for delaying diacritical key events
 	private static final ExecutorService executor = Executors.newCachedThreadPool();
 	
@@ -71,7 +72,8 @@ public class KeyHandler implements KeyListener {
 	 * 
 	 * @param keyMapper the target for keyboard events
 	 */
-	public KeyHandler(KeyboardMapper keyMapper) {
+	public KeyHandler(MainUI window, KeyboardMapper keyMapper) {
+		this.mainWindow = window;
 		this.keyMapper = keyMapper;
 	}
 	
@@ -87,9 +89,11 @@ public class KeyHandler implements KeyListener {
 	
 	@Override
 	public void keyPressed(KeyEvent evt) {
-		if (Config.USE_DEBUG_INTERPRETER && evt.getExtendedKeyCode() == KeyEvent.VK_LESS) {
-//			System.out.println("key VK_LESS...");
-//			System.out.flush();
+		int extendedKeyCode = evt.getExtendedKeyCode();
+		
+		if (Config.USE_DEBUG_INTERPRETER && extendedKeyCode == KeyEvent.VK_LESS) {
+			System.out.println("key VK_LESS...");
+			System.out.flush();
 			
 			if (this.dumpOnVkLess) {
 				Processes.requestFlightRecorderStopAndDump();
@@ -101,12 +105,16 @@ public class KeyHandler implements KeyListener {
 			
 			return;
 		}
-				
+		
+		if (extendedKeyCode == KeyEvent.VK_F12) {
+			mainWindow.toggleControls();
+		}
+		
 //		System.out.printf("at %d : panel.keyPressed -> keyCode = %03d, extKeyCode = %05d\n",
 //				System.currentTimeMillis(), evt.getKeyCode(), evt.getExtendedKeyCode());
-		this.keyMapper.pressed(evt.getExtendedKeyCode());
+		this.keyMapper.pressed(extendedKeyCode);
 		
-		Integer code = Integer.valueOf(evt.getExtendedKeyCode());
+		Integer code = Integer.valueOf(extendedKeyCode);
 		if (!this.currPressed.contains(code)) { this.currPressed.add(code); }
 	}
 	

@@ -62,7 +62,7 @@ public class MainUI {
 
 	// the top-level frame for the UI
 	private JFrame frmDwarfMesaEngine;
-	
+
 	private final String title;
 	private final int displayWidth;
 	private final int displayHeight;
@@ -101,8 +101,8 @@ public class MainUI {
 		this.frmDwarfMesaEngine = new JFrame();
 		this.frmDwarfMesaEngine.setTitle(emulatorName + " Mesa Engine - " + this.title);
 		this.frmDwarfMesaEngine.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		this.frmDwarfMesaEngine.getContentPane().setLayout(new BorderLayout(2, 2));
 		
+		boolean isFullScreen = false;
 		if (runInFullscreen) {
 			this.frmDwarfMesaEngine.setUndecorated(true);
 			this.frmDwarfMesaEngine.setResizable(false);
@@ -111,9 +111,26 @@ public class MainUI {
 			if (device.isFullScreenSupported()) {
 				device.setFullScreenWindow(this.frmDwarfMesaEngine);
 				resizable = false;
+				isFullScreen = true;
 			}
 		}
 		
+		// In windowed mode the screen layout is:
+		//   NORTH:  Toolbar
+		//   CENTER: Display Panel
+		//   SOUTH:  Status Line
+		// In fullscreen mode the layout is:
+		//   NORTH:  Toolbar
+		//   CENTER: Status Line
+		//   SOUTH:  Display Panel
+		// The toolbar/status line can be toggled on/off and will appear together at the top of the display
+		// The very bottom of the display panel will be slightly clipped while they are being shown.
+
+		// When going full screen, remove the horizontal gaps between components. Otherwise, when
+		// the tool bar and status line are not displayed, there will be a 4 pixel gap at the top
+		// of the display.
+		this.frmDwarfMesaEngine.getContentPane().setLayout(new BorderLayout(2, isFullScreen ? 0 : 2));
+
 		this.toolBar = new JToolBar();
 		this.toolBar.setFloatable(false);
 		this.toolBar.setOrientation(SwingConstants.HORIZONTAL);
@@ -156,19 +173,34 @@ public class MainUI {
 		this.displayPanel.setMinimumSize(dims);
 		this.displayPanel.setMaximumSize(dims);
 		this.displayPanel.setPreferredSize(dims);
-		this.frmDwarfMesaEngine.getContentPane().add(this.displayPanel, BorderLayout.CENTER);
+		this.frmDwarfMesaEngine.getContentPane().add(this.displayPanel, isFullScreen ? BorderLayout.SOUTH : BorderLayout.CENTER);
 		
 		this.statusLine = new JLabel(" Mesa Engine not running");
 		this.statusLine.setFont(new Font("Monospaced", Font.BOLD, 12));
-		this.frmDwarfMesaEngine.getContentPane().add(this.statusLine, BorderLayout.SOUTH);
+		this.frmDwarfMesaEngine.getContentPane().add(this.statusLine, isFullScreen ? BorderLayout.CENTER : BorderLayout.SOUTH);
 
 		this.setRunningState(RunningState.notRunning);
 		this.setFloppyName(null);
 		
+		if (isFullScreen) {
+			// Start fullscreen mode with the status line and toolbar invisible.
+			this.toolBar.setVisible(false);
+			this.statusLine.setVisible(false);
+		}
+
 		this.frmDwarfMesaEngine.pack();
 		this.frmDwarfMesaEngine.setResizable(resizable);
 	}
 	
+	/**
+	 * Toggle the visibility of the toolbar and status line.
+	 */
+	public void toggleControls() {
+		this.toolBar.setVisible(!this.toolBar.isVisible());
+		this.statusLine.setVisible(!this.statusLine.isVisible());
+		this.frmDwarfMesaEngine.pack();
+	}
+
 	/**
 	 * @return the top-level frame of the Dwarf UI
 	 */
@@ -277,37 +309,19 @@ public class MainUI {
 	 * Determine if fullscreen is supported and if so the available size for the
 	 * the Mesa engine display.
 	 * 
-	 * @return the rectangle having the available size for die Mesa display or {@code null}
+	 * @return the rectangle having the available size for the Mesa display or {@code null}
 	 *      if fullscreen is not supported or possible.
 	 */
 	public static Rectangle getFullscreenUsableDims() {
 		
 		// build a dummy UI with the same vertical layout as the real one
 		JFrame frame = new JFrame("Fullscreen");
-		frame.getContentPane().setLayout(new BorderLayout(2, 2));
-		
-		JToolBar toolBar = new JToolBar();
-		toolBar.setFloatable(false);
-		toolBar.setOrientation(SwingConstants.HORIZONTAL);
-		frame.getContentPane().add(toolBar, BorderLayout.NORTH);
-		
-		JButton btnStart = new JButton("Start");
-		btnStart.setToolTipText("boot the mesa engine");
-		toolBar.add(btnStart);
-		
-		JButton btnStop = new JButton("Stop");
-		btnStop.setToolTipText("stop the running engine and persist disk(s) modifications");
-		toolBar.add(btnStop);
-		btnStop.addActionListener(e -> { frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING)); System.exit(0); });
+		frame.getContentPane().setLayout(new BorderLayout(0, 2));
 		
 		JLabel label = new JLabel("", JLabel.CENTER);
 		label.setText("This is not yet in fullscreen mode!");
 		label.setOpaque(true);
 		frame.getContentPane().add(label, BorderLayout.CENTER);
-		
-		JLabel statusLine = new JLabel(" This is a dummy status line");
-		statusLine.setFont(new Font("Monospaced", Font.BOLD, 12));
-		frame.getContentPane().add(statusLine, BorderLayout.SOUTH);
 		
 		// try to display the dummy UI in fullscreen mode to get the max. size of the Mesa machine display
 		Rectangle innerRectangle = null;
@@ -318,7 +332,10 @@ public class MainUI {
 		if (device.isFullScreenSupported()) {
 			device.setFullScreenWindow(frame); // switch to fullscreen
 			innerRectangle = label.getBounds();// the the net display region size
+			System.out.printf("Fullscreen dims: (%d, %d)\n", innerRectangle.width, innerRectangle.height);
 			device.setFullScreenWindow(null);  // leave fullscreen mode
+		} else {
+			System.out.printf("Fullscreen not supported\n");
 		}
 		
 		// remove the dummy UI from the display

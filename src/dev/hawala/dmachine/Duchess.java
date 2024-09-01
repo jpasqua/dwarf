@@ -430,7 +430,7 @@ public class Duchess {
 				} else {
 					kMapper.mapDefaults_de_DE();
 				}
-				window.getDisplayPane().addKeyListener(new KeyHandler(kMapper));
+				window.getDisplayPane().addKeyListener(new KeyHandler(window, kMapper));
 				
 				if (resetKeysOnFocusLost) {
 					FocusListener focusHandler = new FocusListener() {

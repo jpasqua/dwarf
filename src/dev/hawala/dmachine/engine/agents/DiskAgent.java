@@ -152,17 +152,17 @@ public class DiskAgent extends Agent {
 		/**
 		 * Constructor.
 		 * 
-		 * @param f the file containing the raw disk content,
+		 * @param rawDiskFile the file containing the raw disk content,
 		 *   the filename will be used to locate the current delta.
 		 * @param readonly is the disk to be readonly?
 		 * @param deltasToKeep the number of old delta files to preserve after saving the new delta.
 		 * @throws DeltaCorrupted if the delta file is corrupted (i.e. not a valid delta file)
 		 * @throws IOException in case of access or plausibility problems with the disk file
 		 */
-		public DiskFile(File f, boolean readonly, int deltasToKeep) throws DeltaCorrupted, IOException {
+		public DiskFile(File rawDiskFile, boolean readonly, int deltasToKeep) throws DeltaCorrupted, IOException {
+			this.f = rawDiskFile.getAbsoluteFile();
 			int wordLength = ((int)(f.length() & 0xFFFFFFFF) + 1) / 2;
 			
-			this.f = f;
 			this.cylinders = wordLength / (DISK_HEADS * DISK_SECTORS * PrincOpsDefs.WORDS_PER_PAGE);
 			this.content = new short[wordLength];
 			this.chunks = new short[this.cylinders * DISK_HEADS * DISK_SECTORS];

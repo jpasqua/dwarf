@@ -67,6 +67,10 @@ public class KeyHandler implements KeyListener {
 	// the target for keyboard events
 	private final KeyboardMapper keyMapper;
 	
+	// Are we running on a Mac?
+	private final boolean platformMac;
+
+
 	/**
 	 * Constructor.
 	 * 
@@ -75,6 +79,8 @@ public class KeyHandler implements KeyListener {
 	public KeyHandler(MainUI window, KeyboardMapper keyMapper) {
 		this.mainWindow = window;
 		this.keyMapper = keyMapper;
+
+	  this.platformMac = System.getProperty("os.name").toLowerCase().contains("mac");
 	}
 	
 	// wait 50 ms
@@ -87,13 +93,25 @@ public class KeyHandler implements KeyListener {
 	
 	private boolean dumpOnVkLess = false;
 	
+	private int fixExtendedCode(int code, int extendedCode) {
+		// On macOS (as of Java 22, macOS 14.6) the extendedCode given for certain keys
+		// is not what one would expect. Unfortunately for these keys it wasn't possible
+		// to deal with the issues in the keyboard.map file so we handle them here.
+		if (!this.platformMac) return extendedCode;
+		if (code == KeyEvent.VK_SLASH) return KeyEvent.VK_SLASH;
+		if (code == KeyEvent.VK_BACK_QUOTE) return KeyEvent.VK_BACK_QUOTE;
+		if (code == KeyEvent.VK_BACK_SLASH) return KeyEvent.VK_BACK_SLASH;
+		if (code == KeyEvent.VK_5) return KeyEvent.VK_5;
+		return extendedCode;
+	}
+
 	@Override
 	public void keyPressed(KeyEvent evt) {
-		int extendedKeyCode = evt.getExtendedKeyCode();
+		int extendedKeyCode = fixExtendedCode(evt.getKeyCode(), evt.getExtendedKeyCode());
 		
 		if (Config.USE_DEBUG_INTERPRETER && extendedKeyCode == KeyEvent.VK_LESS) {
-			System.out.println("key VK_LESS...");
-			System.out.flush();
+//			System.out.println("key VK_LESS...");
+//			System.out.flush();
 			
 			if (this.dumpOnVkLess) {
 				Processes.requestFlightRecorderStopAndDump();
@@ -110,8 +128,9 @@ public class KeyHandler implements KeyListener {
 			mainWindow.toggleControls();
 		}
 		
+
 //		System.out.printf("at %d : panel.keyPressed -> keyCode = %03d, extKeyCode = %05d\n",
-//				System.currentTimeMillis(), evt.getKeyCode(), evt.getExtendedKeyCode());
+//		System.currentTimeMillis(), evt.getKeyCode(), extendedKeyCode);
 		this.keyMapper.pressed(extendedKeyCode);
 		
 		Integer code = Integer.valueOf(extendedKeyCode);
@@ -120,16 +139,17 @@ public class KeyHandler implements KeyListener {
 	
 	@Override
 	public void keyReleased(KeyEvent evt) {
+		int extendedKeyCode = fixExtendedCode(evt.getKeyCode(), evt.getExtendedKeyCode());
 //		System.out.printf("at %d : panel.keyReleased -> keyCode = %03d, extKeyCode = %05d\n",
-//				System.currentTimeMillis(), evt.getKeyCode(), evt.getExtendedKeyCode());
+//				System.currentTimeMillis(), evt.getKeyCode(), extendedKeyCode);
 		
-		this.keyMapper.released(evt.getExtendedKeyCode());
+		this.keyMapper.released(extendedKeyCode);
 		
-		Integer code = Integer.valueOf(evt.getExtendedKeyCode());
+		Integer code = Integer.valueOf(extendedKeyCode);
 		if (this.currPressed.contains(code)) {
 			this.currPressed.remove(code);
 		} else {
-//			System.out.printf("dead key char: 0x%04X\n", code.intValue());
+			System.out.printf("dead key char: 0x%04X\n", code.intValue());
 			this.keyMapper.pressed(code.intValue());
 			executor.execute(() -> { safeWait(); this.keyMapper.released(code.intValue()); }); 
 		}

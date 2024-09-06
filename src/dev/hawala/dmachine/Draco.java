@@ -29,6 +29,7 @@ package dev.hawala.dmachine;
 import java.awt.EventQueue;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -298,13 +299,15 @@ public class Draco {
 		window.setFloppyName(floppyPrefix + floppyFile.getName());
 	}
 	
-	private static void dumpConfiguration() {
+	private static void dumpConfiguration(boolean doFullscreen) {
 		System.out.printf("Configuration from %s\n", configFilename);
 		System.out.printf(" fallbackGerm: %s\n", germFile);
 		System.out.printf(" switches    : %s\n", bootSwitches);
 		System.out.printf(" boot file   : %s\n", diskFile);
 		System.out.printf(" deltas limit: %d\n", oldDeltasToKeep);
-		System.out.printf(" display     : %s\n", largeScreen ? "large - 1152 x 861 (19\")" : "small - 832 x 633 (15\")");
+		System.out.printf(" display     : %s%s\n",
+			largeScreen ? "large - 1152 x 861 (19\")" : "small - 832 x 633 (15\")",
+			doFullscreen ? "(fullscreen)" : "");
 		System.out.printf(" keyboardMap : %s\n", (keyboardMapFile != null) ? keyboardMapFile : "");
 		System.out.printf(" xeroxCtrlKey: 0x%08X\n", xeroxControlKeyCode);
 		System.out.printf(" resetKeysOnF: %s\n", (resetKeysOnFocusLost)  ? "yes" : "no");
@@ -411,7 +414,8 @@ public class Draco {
 		boolean doNetboot = false;
 		long bootFileNumber = 0;
 		String cfgFile = null;
-		
+		boolean doFullscreen = false;
+
 		// command line parameters pass 1: check for test only OR run configuration
 		for (String arg : args) {
 			if (!arg.startsWith("-")) {
@@ -451,13 +455,25 @@ public class Draco {
 				} else if ("-netinstall".equalsIgnoreCase(arg)) {
 					doNetboot = true;
 					bootFileNumber = InitialMesaMicrocode.BFN_Daybreak_Installer;
+				} else if ("-fullscreen".equalsIgnoreCase(arg)) {
+					doFullscreen = true;
 				} else {
 					System.out.printf("Warning: ignoring unknown command line argument: %s\n", arg);
 				}
 			}
 		}
+
+		if (doFullscreen) {
+			Rectangle dims = MainUI.getFullscreenUsableDims();
+			if (dims == null) {
+				doFullscreen = false;
+			} else {
+				doTerminate = true;	// When fullscreen, autoclose.  There is no "close window" button
+			}
+		}
+
 		if (dumpConfig) {
-			dumpConfiguration();
+			dumpConfiguration(doFullscreen);
 		}
 		
 		// merge disks if requested, doing nothing else afterwards
@@ -572,12 +588,13 @@ public class Draco {
 		
 		// create and start the ui
 		boolean logKeys = logKeyPressed;
+		boolean runInFullscreen = doFullscreen;
 		EventQueue.invokeLater(() -> {	
 			try {	
 				// setup the ui main window
 				int displayWidth = Mem.displayPixelWidth;
 				int displayHeight = Mem.displayPixelHeight;
-				window = new MainUI("Dwarf / Draco 6085", title, displayWidth, displayHeight, true, false, false); // TODO: make resizable a program/configuration parameter?
+				window = new MainUI("Dwarf / Draco 6085", title, displayWidth, displayHeight, true, false, runInFullscreen); // TODO: make resizable a program/configuration parameter?
 				window.getFrame().setVisible(true);
 				
 				// attach the mouse and keyboard handlers (java-ui => mesa engine) 

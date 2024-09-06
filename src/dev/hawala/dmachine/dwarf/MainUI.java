@@ -313,15 +313,37 @@ public class MainUI {
 	 *      if fullscreen is not supported or possible.
 	 */
 	public static Rectangle getFullscreenUsableDims() {
-		
 		// build a dummy UI with the same vertical layout as the real one
+		// In fullscreen mode the layout is:
+		//   NORTH:  Toolbar
+		//   CENTER: Status Line
+		//   SOUTH:  Display Panel
+
 		JFrame frame = new JFrame("Fullscreen");
-		frame.getContentPane().setLayout(new BorderLayout(0, 2));
+		frame.getContentPane().setLayout(new BorderLayout(2, 0));
+		
+		JToolBar toolBar = new JToolBar();
+		toolBar.setFloatable(false);
+		toolBar.setOrientation(SwingConstants.HORIZONTAL);
+		frame.getContentPane().add(toolBar, BorderLayout.NORTH);
+		
+		JButton btnStart = new JButton("Start");
+		btnStart.setToolTipText("boot the mesa engine");
+		toolBar.add(btnStart);
+		
+		JButton btnStop = new JButton("Stop");
+		btnStop.setToolTipText("stop the running engine and persist disk(s) modifications");
+		toolBar.add(btnStop);
+		btnStop.addActionListener(e -> { frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING)); System.exit(0); });
 		
 		JLabel label = new JLabel("", JLabel.CENTER);
 		label.setText("This is not yet in fullscreen mode!");
 		label.setOpaque(true);
-		frame.getContentPane().add(label, BorderLayout.CENTER);
+		frame.getContentPane().add(label, BorderLayout.SOUTH);
+		
+		JLabel statusLine = new JLabel(" This is a dummy status line");
+		statusLine.setFont(new Font("Monospaced", Font.BOLD, 12));
+		frame.getContentPane().add(statusLine, BorderLayout.CENTER);
 		
 		// try to display the dummy UI in fullscreen mode to get the max. size of the Mesa machine display
 		Rectangle innerRectangle = null;
@@ -332,10 +354,7 @@ public class MainUI {
 		if (device.isFullScreenSupported()) {
 			device.setFullScreenWindow(frame); // switch to fullscreen
 			innerRectangle = label.getBounds();// the the net display region size
-			System.out.printf("Fullscreen dims: (%d, %d)\n", innerRectangle.width, innerRectangle.height);
 			device.setFullScreenWindow(null);  // leave fullscreen mode
-		} else {
-			System.out.printf("Fullscreen not supported\n");
 		}
 		
 		// remove the dummy UI from the display

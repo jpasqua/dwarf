@@ -1754,7 +1754,7 @@ public class HDisk extends DeviceHandler {
 			deltatemp.renameTo(delta);
 			
 			// delete oldest files to reach deltasToKeep
-			File dir = this.f.getParentFile();
+			File dir = this.f.getAbsoluteFile().getParentFile();
 			String filterFnStart = delta.getName() + "-";
 			File[] oldDeltas = dir.listFiles(new FilenameFilter() {
 				
@@ -1794,7 +1794,7 @@ public class HDisk extends DeviceHandler {
 			}
 			
 			// copy the disk and delta files into an zip archive
-			File dir = this.f.getParentFile();
+			File dir = this.f.getAbsoluteFile().getParentFile();
 			String filterFnStart = delta.getName() + "-";
 			File[] deltas = dir.listFiles(new FilenameFilter() {
 				

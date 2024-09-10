@@ -28,13 +28,13 @@ package dev.hawala.dmachine.dwarf;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -111,6 +111,7 @@ public class MainUI {
 		this.frmDwarfMesaEngine.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		isFullScreen = false;
+        Dimension screenDims = null;
 		if (runInFullscreen) {
 			this.frmDwarfMesaEngine.setUndecorated(true);
 			this.frmDwarfMesaEngine.setResizable(false);
@@ -120,19 +121,10 @@ public class MainUI {
 				device.setFullScreenWindow(this.frmDwarfMesaEngine);
 				resizable = true; // We will have scrollbars when needed
 				isFullScreen = true;
+				screenDims = new Dimension(device.getDisplayMode().getWidth(), device.getDisplayMode().getHeight());
 			}
 		}
-		
-		// In windowed mode the screen layout is:
-		//   NORTH:  Toolbar
-		//   CENTER: Display Panel
-		//   SOUTH:  Status Line
-		// In fullscreen mode the layout is:
-		//   NORTH:  Toolbar
-		//   CENTER: Status Line
-		//   SOUTH:  Display Panel
-		// The toolbar/status line can be toggled on/off and will appear together at the top of the display
-		// The very bottom of the display panel will be slightly clipped while they are being shown.
+
 		int spacing = isFullScreen ? 0 : 2;
 		JPanel contentPane = new JPanel();
 		contentPane.setLayout(new BorderLayout(spacing, spacing));
@@ -179,11 +171,28 @@ public class MainUI {
 		this.displayPanel.setMinimumSize(dims);
 		this.displayPanel.setMaximumSize(dims);
 		this.displayPanel.setPreferredSize(dims);
-		contentPane.add(this.displayPanel, isFullScreen ? BorderLayout.SOUTH : BorderLayout.CENTER);
+		if (isFullScreen) {
+			// Create the parent panel with a black background
+			JPanel bezelPanel = new JPanel();
+			bezelPanel.setBackground(Color.BLACK);  // Set background to black
+		    bezelPanel.setLayout(new GridBagLayout());  // Use GridBagLayout for centering
+	        bezelPanel.setPreferredSize(screenDims);  // Preferred size
+
+	        // Use GridBagConstraints to center the child panel
+		    GridBagConstraints gbc = new GridBagConstraints();
+		    gbc.gridx = 0;
+		    gbc.gridy = 0;
+		    gbc.anchor = GridBagConstraints.CENTER;  // Center the component
+		    bezelPanel.add(this.displayPanel, gbc);  // Add the child panel to the parent panel
+
+			contentPane.add(bezelPanel, BorderLayout.SOUTH);
+		} else {
+			contentPane.add(this.displayPanel, BorderLayout.SOUTH);
+		}
 		
 		this.statusLine = new JLabel(" Mesa Engine not running");
 		this.statusLine.setFont(new Font("Monospaced", Font.BOLD, 12));
-		contentPane.add(this.statusLine, isFullScreen ? BorderLayout.CENTER : BorderLayout.SOUTH);
+		contentPane.add(this.statusLine, BorderLayout.CENTER);
 
 		this.setRunningState(RunningState.notRunning);
 		this.setFloppyName(null);
@@ -196,10 +205,9 @@ public class MainUI {
 			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 	        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-	        Dimension screenDims = new Dimension(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
-	        if (screenDims.width > dims.width && screenDims.height > dims.height) {
-	        	screenDims = dims;
-	        }
+//	        if (screenDims.width > dims.width && screenDims.height > dims.height) {
+//	        	screenDims = dims;
+//	        }
 	        scrollPane.getViewport().setPreferredSize(screenDims);
 		} else {
 			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -347,36 +355,14 @@ public class MainUI {
 	 *      if fullscreen is not supported or possible.
 	 */
 	public static Rectangle getFullscreenUsableDims() {
-		
 		// build a dummy UI with the same vertical layout as the real one
 		JFrame frame = new JFrame("Fullscreen");
 		frame.getContentPane().setLayout(new BorderLayout(0, 0));
 		
-		if (false) {	// We no longer need to take these into account for fullscreen since we hide them
-			JToolBar toolBar = new JToolBar();
-			toolBar.setFloatable(false);
-			toolBar.setOrientation(SwingConstants.HORIZONTAL);
-			frame.getContentPane().add(toolBar, BorderLayout.NORTH);
-			
-			JButton btnStart = new JButton("Start");
-			btnStart.setToolTipText("boot the mesa engine");
-			toolBar.add(btnStart);
-			
-			JButton btnStop = new JButton("Stop");
-			btnStop.setToolTipText("stop the running engine and persist disk(s) modifications");
-			toolBar.add(btnStop);
-			btnStop.addActionListener(e -> { frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING)); System.exit(0); });
-
-			JLabel statusLine = new JLabel(" This is a dummy status line");
-			statusLine.setFont(new Font("Monospaced", Font.BOLD, 12));
-			frame.getContentPane().add(statusLine, BorderLayout.SOUTH);
-		}		
-
 		JLabel label = new JLabel("", JLabel.CENTER);
 		label.setText("This is not yet in fullscreen mode!");
 		label.setOpaque(true);
 		frame.getContentPane().add(label, BorderLayout.CENTER);
-		
 		
 		// try to display the dummy UI in fullscreen mode to get the max. size of the Mesa machine display
 		Rectangle innerRectangle = null;
@@ -393,7 +379,7 @@ public class MainUI {
 		// remove the dummy UI from the display
 		frame.setVisible(false);
 		frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-		try { Thread.sleep(200); } catch (InterruptedException e1) { }
+		try { Thread.sleep(300); } catch (InterruptedException e1) { }
 		
 		// done
 		return innerRectangle;

@@ -176,8 +176,10 @@ public class MainUI {
 			JPanel bezelPanel = new JPanel();
 			bezelPanel.setBackground(Color.BLACK);  // Set background to black
 		    bezelPanel.setLayout(new GridBagLayout());  // Use GridBagLayout for centering
-	        bezelPanel.setPreferredSize(screenDims);  // Preferred size
-
+		    Dimension bDims = new Dimension(
+		    		Math.max(screenDims.width,  dims.width), Math.max(screenDims.height,  dims.height));
+	        bezelPanel.setPreferredSize(bDims);
+	        
 	        // Use GridBagConstraints to center the child panel
 		    GridBagConstraints gbc = new GridBagConstraints();
 		    gbc.gridx = 0;
@@ -198,17 +200,14 @@ public class MainUI {
 		this.setFloppyName(null);
 		
 		JScrollPane scrollPane = new JScrollPane(contentPane);
+		System.out.println("contentPane dims = " + contentPane.getPreferredSize());
 		if (isFullScreen) {
 			// Start fullscreen mode with the status line and toolbar invisible.
 			this.toolBar.setVisible(false);
 			this.statusLine.setVisible(false);
 			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-	        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-//	        if (screenDims.width > dims.width && screenDims.height > dims.height) {
-//	        	screenDims = dims;
-//	        }
-	        scrollPane.getViewport().setPreferredSize(screenDims);
+			scrollPane.getViewport().setPreferredSize(screenDims);
 		} else {
 			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -240,7 +239,7 @@ public class MainUI {
         scrollPane.revalidate();
         scrollPane.repaint();
 
-        // this.frmDwarfMesaEngine.pack();
+//        this.frmDwarfMesaEngine.pack();
 	}
 
 	/**

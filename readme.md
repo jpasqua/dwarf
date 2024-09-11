@@ -1,3 +1,21 @@
+## Fork Information
+
+This fork of Dwarf primarily focuses on tweaks to the fullscreen capability. The `dist.zip` is unchanged from the original repo. This repo includes a new `dwarf.jar` file that can be substituted for the copy within `dist.zip`.
+
+Changes:
+
+* **Emulator Controls**: The toolbar and status line are both at the top of the emulator window rather than the toolbar at the top and the status line at the bottom. I refer to these collectively as the emulator controls.
+* **Scrollbars**: The emulator window will now display scrollbars when needed.
+* **Fullscreen mode**
+	* Emulator Controls
+		* When running in fullscreen mode in either *draco* or *duchess*, no window decorations are shown and the emulator controls are hidden.
+		*  The emulator controls can be made visible by pressing `F12`. Pressing it again will toggle their visibility.
+		*  When the emulator controls are visible, scrollbars will be shown if needed.
+	* *Draco* can now be run in fullscreen mode even though the display size is fixed by the emulated hardware.
+		* If running on a physical display that is larger than the emulated display (in either dimension), the emulated display will be centered in the physical display, and will be surrounded by black.
+		* If running on a physical display that is smaller than the emulated display (in either dimension), the emulated display will be clipped, but all areas are available via scrolling.
+	* *Duchess* will make the size of the emulated display fully consume the physical display. When the emulator controls are visible, the bottom of the emulator display will be hidden, but is accesible by scrolling.
+
 ## Dwarf, a Mesa machine architecture emulator for Xerox 6085 and Guam workstations
 
 _Dwarf_ is an emulator for the Xerox Mesa processor architecture with 2 incarnations for

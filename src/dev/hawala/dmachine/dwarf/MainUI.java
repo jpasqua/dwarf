@@ -200,7 +200,6 @@ public class MainUI {
 		this.setFloppyName(null);
 		
 		JScrollPane scrollPane = new JScrollPane(contentPane);
-		System.out.println("contentPane dims = " + contentPane.getPreferredSize());
 		if (isFullScreen) {
 			// Start fullscreen mode with the status line and toolbar invisible.
 			this.toolBar.setVisible(false);
@@ -372,6 +371,9 @@ public class MainUI {
 		if (device.isFullScreenSupported()) {
 			device.setFullScreenWindow(frame); // switch to fullscreen
 			innerRectangle = label.getBounds();// the the net display region size
+			// Adjust the usable screen width - Must be a multiple of 16
+			// In practice for mono it seems like it needs a multiple of 64
+			innerRectangle.width = (innerRectangle.width/64)*64;
 			device.setFullScreenWindow(null);  // leave fullscreen mode
 		}
 		

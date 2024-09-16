@@ -125,9 +125,8 @@ public class MainUI {
 			}
 		}
 
-		int spacing = isFullScreen ? 0 : 2;
 		JPanel contentPane = new JPanel();
-		contentPane.setLayout(new BorderLayout(spacing, spacing));
+		contentPane.setLayout(new BorderLayout(0, 0));
 
 		this.toolBar = new JToolBar();
 		this.toolBar.setFloatable(false);
@@ -207,6 +206,7 @@ public class MainUI {
 			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 			scrollPane.getViewport().setPreferredSize(screenDims);
+			scrollPane.setBorder(null);
 		} else {
 			scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);

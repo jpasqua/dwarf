@@ -93,21 +93,25 @@ public class KeyHandler implements KeyListener {
 	
 	private boolean dumpOnVkLess = false;
 	
-	private int fixExtendedCode(int code, int extendedCode) {
+	private int fixExtendedCode(KeyEvent evt) {
+		int code = evt.getKeyCode();
+		int extendedCode = evt.getExtendedKeyCode();
 		// On macOS (as of Java 22, macOS 14.6) the extendedCode given for certain keys
 		// is not what one would expect. Unfortunately for these keys it wasn't possible
 		// to deal with the issues in the keyboard.map file so we handle them here.
 		if (!this.platformMac) return extendedCode;
+
 		if (code == KeyEvent.VK_SLASH) return KeyEvent.VK_SLASH;
 		if (code == KeyEvent.VK_BACK_QUOTE) return KeyEvent.VK_BACK_QUOTE;
 		if (code == KeyEvent.VK_BACK_SLASH) return KeyEvent.VK_BACK_SLASH;
 		if (code == KeyEvent.VK_5) return KeyEvent.VK_5;
+		if (evt.isControlDown() && extendedCode == 0 && code != 0) extendedCode = code;
 		return extendedCode;
 	}
 
 	@Override
 	public void keyPressed(KeyEvent evt) {
-		int extendedKeyCode = fixExtendedCode(evt.getKeyCode(), evt.getExtendedKeyCode());
+		int extendedKeyCode = fixExtendedCode(evt);
 		
 		if (Config.USE_DEBUG_INTERPRETER && extendedKeyCode == KeyEvent.VK_LESS) {
 //			System.out.println("key VK_LESS...");
@@ -139,7 +143,7 @@ public class KeyHandler implements KeyListener {
 	
 	@Override
 	public void keyReleased(KeyEvent evt) {
-		int extendedKeyCode = fixExtendedCode(evt.getKeyCode(), evt.getExtendedKeyCode());
+		int extendedKeyCode = fixExtendedCode(evt);
 //		System.out.printf("at %d : panel.keyReleased -> keyCode = %03d, extKeyCode = %05d\n",
 //				System.currentTimeMillis(), evt.getKeyCode(), extendedKeyCode);
 		

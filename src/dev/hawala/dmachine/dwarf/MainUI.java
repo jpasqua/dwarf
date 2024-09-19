@@ -111,7 +111,7 @@ public class MainUI {
 		this.frmDwarfMesaEngine.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		isFullScreen = false;
-        Dimension screenDims = null;
+		Dimension screenDims = null;
 		if (runInFullscreen) {
 			this.frmDwarfMesaEngine.setUndecorated(true);
 			this.frmDwarfMesaEngine.setResizable(false);

@@ -204,6 +204,9 @@ public class UiRefresher implements ActionListener, iMesaMachineDataAccessor, Po
 		synchronized(this) {
 			this.statusMpPart = String.format(" %04d ", mp);
 			this.newStatusLine = this.statusMpPart + this.statusStatsPart;
+			// JP: Output the MP Code to stdout for external consumption
+			// TO DO: This should be conditionalized on a program parameter
+			System.out.printf("\nMPCODE:%s\n", this.statusMpPart);
 		}	
 	}
 
